@@ -90,33 +90,6 @@ In the example below, two switch accessories have been configured. The first one
 }
 ```
 
-### Example config
-
-In the example below, two switch accessories have been configured. The first one has high priority and the second one has a emoji (tag) and cooldown set.
-
-```json
-{
-  "platform": "NtfyPlatform",
-  "messages": [
-    {
-      "name": "Send warning message",
-      "topic": "my-private-topic-9yfxy",
-      "title": "Warning title",
-      "message": "High priority warning message",
-      "priority": "high"
-    },
-    {
-      "name": "Send alert message",
-      "topic": "my-private-topic-9yfxy",
-      "title": "Alert title",
-      "message": "Alert with emoji that can be triggered once every 10 seconds at most",
-      "tags": "warning",
-      "cooldownTime": 10000
-    }
-  ]
-}
-```
-
 ## JSON message config
 
 When 'Use JSON format' is enabled, you have the ability to set a custom config (JSON) for your messages. Using this format will unlock more advanced features that cannot be configured using the standard Homebridge plugin config UI. The value must be a valid JSON string and adhere to ntfy's JSON message format. ([Read more](https://docs.ntfy.sh/subscribe/api/#json-message-format)). 
