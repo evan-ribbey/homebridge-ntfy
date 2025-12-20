@@ -2,7 +2,7 @@
   "name": "homebridge-ntfy",
   "displayName": "Homebridge Ntfy",
   "type": "module",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Homebridge plugin to send notifications through ntfy.sh from HomeKit",
   "author": {
     "name": "Emil Löfblom",
