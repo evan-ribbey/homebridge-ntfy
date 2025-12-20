@@ -89,3 +89,62 @@ In the example below, two switch accessories have been configured. The first one
   ]
 }
 ```
+
+### Example config
+
+In the example below, two switch accessories have been configured. The first one has high priority and the second one has a emoji (tag) and cooldown set.
+
+```json
+{
+  "platform": "NtfyPlatform",
+  "messages": [
+    {
+      "name": "Send warning message",
+      "topic": "my-private-topic-9yfxy",
+      "title": "Warning title",
+      "message": "High priority warning message",
+      "priority": "high"
+    },
+    {
+      "name": "Send alert message",
+      "topic": "my-private-topic-9yfxy",
+      "title": "Alert title",
+      "message": "Alert with emoji that can be triggered once every 10 seconds at most",
+      "tags": "warning",
+      "cooldownTime": 10000
+    }
+  ]
+}
+```
+
+## JSON message config
+
+When 'Use JSON format' is enabled, you have the ability to set a custom config (JSON) for your messages. Using this format will unlock more advanced features that cannot be configured using the standard Homebridge plugin config UI. The value must be a valid JSON string and adhere to ntfy's JSON message format. ([Read more](https://docs.ntfy.sh/subscribe/api/#json-message-format)). 
+
+Note: Use the plugin config UI when setting the JSON message config. If you're editing the Homebridge config, the JSON message config (stored in `json`) must be escaped first.
+
+### Example JSON message config
+
+In the example below, a message has been configured to have two action buttons. Pressing the first one opens a webpage, and pressing the second one calls a server endpoint with a pre-configured payload.
+
+```json
+{
+  "topic": "my-private-topic-9yfxy",
+  "title": "Adjust A/C",
+  "message": "You left the house. Turn down the A/C?",
+  "actions": [
+    {
+      "action": "view",
+      "label": "Open portal",
+      "url": "https://home.nest.com/",
+      "clear": true
+    },
+    {
+      "action": "http",
+      "label": "Turn down",
+      "url": "https://api.nest.com/",
+      "body": "{\"temperature\": 65}"
+    }
+  ]
+}
+```
