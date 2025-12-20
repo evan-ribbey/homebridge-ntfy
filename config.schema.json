@@ -1,0 +1,149 @@
+{
+  "pluginAlias": "NtfyPlatform",
+  "pluginType": "platform",
+  "singular": true,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Name",
+        "type": "string",
+        "default": "Homebridge Ntfy"
+      },
+      "messages": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "title": "Name <em>(required)</em>",
+              "description": "Name of the switch shown in the Home app.",
+              "type": "string"
+            },
+            "useJson": {
+              "title": "Use JSON format",
+              "description": "For advanced users ONLY! Using JSON will give you more options and the ability to utilize more features in ntfy.",
+              "type": "boolean",
+              "default": false
+            },
+            "topic": {
+              "title": "Topic <strong><font color=\"red\" class=\"text-danger\">*</font></strong>",
+              "description": "Topic to publish message to. <strong>Important:</strong> Topics are public on ntfy's server and can be read by anyone, so pick a name that is hard for others to guess.",
+              "placeholder": "my-topic-2fd8cffa",
+              "type": "string",
+              "condition": {
+								"functionBody": "return !model.messages[arrayIndices].useJson;"
+							}
+            },
+            "title": {
+              "title": "Title",
+              "description": "Title of the message.",
+              "type": "string",
+              "condition": {
+								"functionBody": "return !model.messages[arrayIndices].useJson;"
+							}
+            },
+            "message": {
+              "title": "Message",
+              "description": "The message text.",
+              "type": "string",
+              "condition": {
+								"functionBody": "return !model.messages[arrayIndices].useJson;"
+							}
+            },
+            "priority": {
+              "title": "Priority",
+              "description": "Priority of the message. [<a href=\"https://docs.ntfy.sh/publish/#message-priority\" target=\"_blank\">More info</a>]",
+              "type": "string",
+              "oneOf": [
+                {
+                  "title": "Max",
+                  "const": "max"
+                },
+                {
+                  "title": "High",
+                  "const": "high"
+                },
+                {
+                  "title": "Default",
+                  "const": "default"
+                },
+                {
+                  "title": "Low",
+                  "const": "low"
+                },
+                {
+                  "title": "Min",
+                  "const": "min"
+                }              
+              ],
+              "condition": {
+								"functionBody": "return !model.messages[arrayIndices].useJson;"
+							}
+            },
+            "tags": {
+              "title": "Tags",
+              "description": "Tag message with emoji or text tag. A comma separated list of tag names. [<a href=\"https://docs.ntfy.sh/emojis\" target=\"_blank\">More info</a>]",
+              "type": "string",
+              "condition": {
+								"functionBody": "return !model.messages[arrayIndices].useJson;"
+							}
+            },
+            "json": {
+              "title": "JSON message config <strong><font color=\"red\" class=\"text-danger\">*</font></strong>",
+              "description": "Input must be a valid JSON string and adhere to ntfy's JSON message format. [<a href=\"https://docs.ntfy.sh/subscribe/api/#json-message-format\" target=\"_blank\">More info</a>]",
+              "type": "string",
+              "condition": {
+								"functionBody": "return model.messages[arrayIndices].useJson;"
+							}
+            },
+            "cooldownTime": {
+              "title": "Cooldown time (millis)",
+              "description": "Minimum time before this message can be sent again. Default: off",
+              "type": "integer"
+            }
+          },
+          "required": ["name"],
+          "if": {
+            "properties": {
+              "useJson": { "const": true }
+            }
+          },
+          "then": {
+            "required": ["json"]
+          },
+          "else": {
+            "required": ["topic"]
+          }
+        }
+      }
+    },
+    "required": ["name"]
+  },
+  "layout": [
+    {
+      "type": "array",
+      "title": "Messages",
+      "key": "messages",
+      "items": [
+        {
+          "type": "section",
+          "items": [
+            "messages[].name",
+            "messages[].useJson",
+            "messages[].topic",
+            "messages[].title",
+            "messages[].message",
+            "messages[].priority",
+            "messages[].tags",
+            {
+              "key": "messages[].json",
+              "type": "textarea"
+            },
+            "messages[].cooldownTime"
+          ]
+        }
+      ]
+    }
+  ]
+}
