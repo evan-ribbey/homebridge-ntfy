@@ -3,7 +3,7 @@
   "displayName": "Homebridge Ntfy",
   "type": "module",
   "version": "1.0.0",
-  "description": "Homebridge plugin to send push notifications through ntfy.sh from HomeKit",
+  "description": "Homebridge plugin to send notifications through ntfy.sh from HomeKit",
   "author": {
     "name": "Emil Löfblom",
     "email": "emil.lofblom@icloud.com",
