@@ -16,7 +16,7 @@
           "type": "object",
           "properties": {
             "name": {
-              "title": "Name <em>(required)</em>",
+              "title": "Name",
               "description": "Name of the switch shown in the Home app.",
               "type": "string"
             },
