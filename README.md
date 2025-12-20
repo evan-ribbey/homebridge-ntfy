@@ -148,3 +148,8 @@ In the example below, a message has been configured to have two action buttons. 
   ]
 }
 ```
+
+## Future Plans
+
+- Custom server - Support for configuring a custom server URL, allowing use of a SaaS or self-hosted server instead of the default ntfy.sh server.
+- Authentication - Configure auth credentials (username/password or access token) to be used with servers that have access control enabled.
