@@ -10,6 +10,63 @@
         "type": "string",
         "default": "Homebridge Ntfy"
       },
+      "serverUrl": {
+        "title": "Server URL",
+        "description": "Base URL of the ntfy server to publish to. Leave empty to use the official server at https://ntfy.sh. A base path is supported for servers behind a reverse proxy, e.g. https://home.example.com/ntfy.",
+        "placeholder": "https://ntfy.sh",
+        "type": "string"
+      },
+      "authType": {
+        "title": "Authentication",
+        "description": "How to authenticate when publishing. Self-hosted servers usually require this, and the official server needs it for protected topics. [<a href=\"https://docs.ntfy.sh/publish/#authentication\" target=\"_blank\">More info</a>]",
+        "type": "string",
+        "default": "none",
+        "oneOf": [
+          {
+            "title": "None",
+            "const": "none"
+          },
+          {
+            "title": "Access token",
+            "const": "token"
+          },
+          {
+            "title": "Username and password",
+            "const": "basic"
+          }
+        ]
+      },
+      "accessToken": {
+        "title": "Access token <strong><font color=\"red\" class=\"text-danger\">*</font></strong>",
+        "description": "Access token used to publish to the server. [<a href=\"https://docs.ntfy.sh/config/#access-tokens\" target=\"_blank\">More info</a>]",
+        "placeholder": "tk_AgQdq7mVBoFD37zQVN29RhuMzNIz2",
+        "type": "string",
+        "x-schema-form": {
+          "type": "password"
+        },
+        "condition": {
+          "functionBody": "return model.authType === 'token';"
+        }
+      },
+      "username": {
+        "title": "Username <strong><font color=\"red\" class=\"text-danger\">*</font></strong>",
+        "description": "Username of an account allowed to publish to the topic.",
+        "type": "string",
+        "condition": {
+          "functionBody": "return model.authType === 'basic';"
+        }
+      },
+      "password": {
+        "title": "Password <strong><font color=\"red\" class=\"text-danger\">*</font></strong>",
+        "description": "Password for the account above.",
+        "type": "string",
+        "x-schema-form": {
+          "type": "password"
+        },
+        "condition": {
+          "functionBody": "return model.authType === 'basic';"
+        }
+      },
       "messages": {
         "type": "array",
         "items": {
@@ -121,6 +178,19 @@
     "required": ["name"]
   },
   "layout": [
+    {
+      "type": "fieldset",
+      "title": "Server",
+      "expandable": true,
+      "expanded": true,
+      "items": [
+        "serverUrl",
+        "authType",
+        "accessToken",
+        "username",
+        "password"
+      ]
+    },
     {
       "type": "array",
       "title": "Messages",

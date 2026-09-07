@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { Logging } from 'homebridge';
+import type { NtfyAuth } from './types.js';
 
 export interface MessageRequest {
     topic: string,
@@ -10,10 +11,15 @@ export interface MessageRequest {
 }
 
 export class NtfyClient {
+  private readonly authHeader?: string;
+
   constructor(
     private readonly log: Logging,
     private readonly serverAddress: string,
-  ) {}
+    auth?: NtfyAuth,
+  ) {
+    this.authHeader = this.buildAuthHeader(auth);
+  }
 
   async sendMessage(request: MessageRequest | string) {
     if (this.isMessageRequest(request)) {
@@ -32,7 +38,7 @@ export class NtfyClient {
 
     const body = request.message;
 
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = this.baseHeaders();
     if (request.title) {
       headers.Title = request.title;
     }
@@ -48,22 +54,60 @@ export class NtfyClient {
         this.log.debug('Success! Result:', response.data);
       })
       .catch(error => {
-        this.log.error('ntfy request failed:', error.message);
+        this.logRequestError(error);
       });
   }
 
   private async sendMessageJson(json: string) {
     this.log.debug('Sending ntfy JSON request:', JSON.parse(json));
 
-    await axios.post(this.serverAddress, json)
+    await axios.post(this.serverAddress, json, { headers: this.baseHeaders() })
       .then(response => {
         this.log.debug('Success! Result:', response.data);
       })
       .catch(error => {
-        this.log.error('ntfy request failed:', error.message);
+        this.logRequestError(error);
       });
   }
- 
+
+  private baseHeaders(): Record<string, string> {
+    return this.authHeader ? { Authorization: this.authHeader } : {};
+  }
+
+  private buildAuthHeader(auth?: NtfyAuth): string | undefined {
+    if (!auth) {
+      return undefined;
+    }
+
+    if (auth.type === 'token') {
+      return `Bearer ${auth.accessToken}`;
+    }
+
+    const credentials = Buffer.from(`${auth.username}:${auth.password ?? ''}`).toString('base64');
+    return `Basic ${credentials}`;
+  }
+
+  private logRequestError(error: unknown) {
+    if (axios.isAxiosError(error) && error.response) {
+      const { status, data } = error.response;
+      const details = typeof data === 'string' ? data : JSON.stringify(data);
+
+      if (status === 401 || status === 403) {
+        this.log.error(
+          `ntfy request failed: ${status} - the server rejected the credentials. `
+          + 'Check the authentication settings and that the token or user is allowed to publish to this topic.',
+          details,
+        );
+        return;
+      }
+
+      this.log.error(`ntfy request failed: ${status}`, details);
+      return;
+    }
+
+    this.log.error('ntfy request failed:', error instanceof Error ? error.message : error);
+  }
+
   private isMessageRequest(obj: unknown): obj is MessageRequest {
     return typeof (obj as { topic: unknown }).topic === 'string';
   }

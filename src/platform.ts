@@ -1,9 +1,9 @@
 import type { API, Characteristic, DynamicPlatformPlugin, Logging, PlatformAccessory, PlatformConfig, Service } from 'homebridge';
 import { SwitchAccessory } from './switch-accessory.js';
-import { PLATFORM_NAME, PLUGIN_NAME } from './const.js';
-import type { Message, NtfyPlatformConfig } from './types.js';
+import { DEFAULT_SERVER_URL, PLATFORM_NAME, PLUGIN_NAME } from './const.js';
+import type { Message, NtfyAuth, NtfyPlatformConfig } from './types.js';
 import { NtfyClient } from './ntfy-client.js';
-import { isValidJson } from './utils.js';
+import { isValidJson, normalizeServerUrl } from './utils.js';
 
 export class NtfyPlatform implements DynamicPlatformPlugin {
   readonly Service: typeof Service;
@@ -37,11 +37,16 @@ export class NtfyPlatform implements DynamicPlatformPlugin {
   private registerAccessories() {
     const config = this.config as NtfyPlatformConfig;
 
+    const serverUrl = this.resolveServerUrl(config);
+
+    this.log.info('Using ntfy server:', serverUrl);
+
     const ntfyClient = new NtfyClient(
       this.log,
-      'https://ntfy.sh',
+      serverUrl,
+      this.resolveAuth(config),
     );
-    
+
     if (config.messages) {
       for (const message of config.messages) {
         if (!this.validateMessage(message)) {
@@ -75,6 +80,40 @@ export class NtfyPlatform implements DynamicPlatformPlugin {
         this.log.debug('Removing existing accessory from cache:', accessory.displayName);
         this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
       }
+    }
+  }
+
+  private resolveServerUrl(config: NtfyPlatformConfig): string {
+    const serverUrl = normalizeServerUrl(config.serverUrl);
+
+    if (config.serverUrl?.trim() && !serverUrl) {
+      this.log.error(
+        `Invalid server URL - falling back to ${DEFAULT_SERVER_URL}:`,
+        config.serverUrl,
+      );
+    }
+
+    return serverUrl ?? DEFAULT_SERVER_URL;
+  }
+
+  private resolveAuth(config: NtfyPlatformConfig): NtfyAuth | undefined {
+    switch (config.authType) {
+    case 'token':
+      if (!config.accessToken) {
+        this.log.error('Access token authentication is selected but no access token is configured. Sending requests unauthenticated.');
+        return undefined;
+      }
+      return { type: 'token', accessToken: config.accessToken };
+
+    case 'basic':
+      if (!config.username || !config.password) {
+        this.log.error('Username/password authentication is selected but the credentials are incomplete. Sending requests unauthenticated.');
+        return undefined;
+      }
+      return { type: 'basic', username: config.username, password: config.password };
+
+    default:
+      return undefined;
     }
   }
 

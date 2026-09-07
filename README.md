@@ -3,7 +3,11 @@
 [![npm](https://img.shields.io/npm/v/homebridge-ntfy/latest?label=latest)](https://www.npmjs.com/package/homebridge-ntfy)
 [![npm](https://img.shields.io/npm/dt/homebridge-ntfy)](https://www.npmjs.com/package/homebridge-ntfy)
 
-This plugin allows you to send notifications through ntfy.sh (https://ntfy.sh) directly from HomeKit. It works by creating a momentary switch, that when turned on, sends a message via ntfy.sh. Once the message has been sent, the switch automatically returns to its off state.
+> Fork of [emilof/homebridge-ntfy](https://github.com/emilof/homebridge-ntfy) adding support for custom (self-hosted or SaaS) ntfy servers and authentication.
+
+This plugin allows you to send notifications through ntfy (https://ntfy.sh) directly from HomeKit. It works by creating a momentary switch, that when turned on, sends a message via ntfy. Once the message has been sent, the switch automatically returns to its off state.
+
+Messages are sent through the official ntfy.sh server by default, but you can point the plugin at your own self-hosted or SaaS ntfy server instead. See [Custom server](#custom-server).
 
 This is especially useful if you want to send a notification to your device when a particular event occurs. Simply create a HomeKit automation that is triggered by the desired event or condition, and set the action to turn on the switch.
 
@@ -11,6 +15,7 @@ This is especially useful if you want to send a notification to your device when
 
 - Homebridge installed
 - The ntfy app installed on your device
+- Optional: a self-hosted or SaaS ntfy server, if you'd rather not use the official ntfy.sh server
 
 ## Installation
 
@@ -52,6 +57,11 @@ An alternative is to edit the Homebridge JSON config file manually by adding the
 | Property              | Type      | Required | Description                                                               |
 | --------------------- | --------- | -------- | ------------------------------------------------------------------------- |
 | `platform`            | `string`  | Yes      | Platform identifier. **Do not change this line**                          |
+| `serverUrl`           | `string`  | No       | Base URL of the ntfy server to publish to. A base path is supported for servers behind a reverse proxy, e.g. `https://home.example.com/ntfy`. Default: **https://ntfy.sh**. |
+| `authType`            | `string`  | No       | Authentication method to use when publishing: `none`, `token` or `basic`. Default: **none**. [[More info](https://docs.ntfy.sh/publish/#authentication)] |
+| `accessToken`         | `string`  | Yes/No   | Required if `authType` is set to `token`. [[More info](https://docs.ntfy.sh/config/#access-tokens)] |
+| `username`            | `string`  | Yes/No   | Required if `authType` is set to `basic`.                                 |
+| `password`            | `string`  | Yes/No   | Required if `authType` is set to `basic`.                                 |
 | `messages`            | `array`   | Yes      | List of messages/switch accessories to setup in HomeKit.                  |
 | └&nbsp;`name`         | `string`  | Yes      | Name of the switch shown in the Home app.                                 |
 | └&nbsp;`useJson`      | `boolean` | No       | Set to `true` to use ntfy JSON format. See parameter `json`. Default: **false**. |
@@ -90,6 +100,71 @@ In the example below, two switch accessories have been configured. The first one
 }
 ```
 
+## Custom server
+
+By default the plugin publishes to the official server at `https://ntfy.sh`. Set `serverUrl` to use your own self-hosted or SaaS server instead. The URL is the base address of the server, not a topic URL — the topic from each message is appended automatically.
+
+```json
+{
+  "platform": "NtfyPlatform",
+  "serverUrl": "https://ntfy.home.example.com",
+  "messages": [
+    {
+      "name": "Send warning message",
+      "topic": "home-alerts",
+      "message": "Warning message text"
+    }
+  ]
+}
+```
+
+If no protocol is given, `https` is assumed. A base path is kept, so a server behind a reverse proxy such as `https://home.example.com/ntfy` works too. If the URL can't be parsed, the plugin logs an error and falls back to `https://ntfy.sh`.
+
+### Authentication
+
+Self-hosted servers usually have access control enabled, and the official server needs authentication for protected topics. Set `authType` to `token` or `basic` and supply the matching credentials. ([Read more](https://docs.ntfy.sh/publish/#authentication))
+
+Using an access token:
+
+```json
+{
+  "platform": "NtfyPlatform",
+  "serverUrl": "https://ntfy.home.example.com",
+  "authType": "token",
+  "accessToken": "tk_AgQdq7mVBoFD37zQVN29RhuMzNIz2",
+  "messages": [
+    {
+      "name": "Send warning message",
+      "topic": "home-alerts",
+      "message": "Warning message text"
+    }
+  ]
+}
+```
+
+Using a username and password:
+
+```json
+{
+  "platform": "NtfyPlatform",
+  "serverUrl": "https://ntfy.home.example.com",
+  "authType": "basic",
+  "username": "homebridge",
+  "password": "your-password",
+  "messages": [
+    {
+      "name": "Send warning message",
+      "topic": "home-alerts",
+      "message": "Warning message text"
+    }
+  ]
+}
+```
+
+Credentials are sent as an `Authorization` header on every request, so use `https` for any server reachable outside your local network. If the credentials are incomplete, the plugin logs an error and sends requests unauthenticated. When the server rejects the credentials, the resulting `401`/`403` is reported in the Homebridge log.
+
+Authentication applies to JSON format messages as well.
+
 ## JSON message config
 
 When 'Use JSON format' is enabled, you have the ability to set a custom config (JSON) for your messages. Using this format will unlock more advanced features that cannot be configured using the standard Homebridge plugin config UI. The value must be a valid JSON string and adhere to ntfy's JSON message format. ([Read more](https://docs.ntfy.sh/subscribe/api/#json-message-format)). 
@@ -121,8 +196,3 @@ In the example below, a message has been configured to have two action buttons. 
   ]
 }
 ```
-
-## Future Plans
-
-- Custom server - Support for configuring a custom server URL, allowing use of a SaaS or self-hosted server instead of the default ntfy.sh server.
-- Authentication - Configure auth credentials (username/password or access token) to be used with servers that have access control enabled.
