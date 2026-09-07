@@ -2,7 +2,7 @@
   "name": "@eribbey/homebridge-ntfy",
   "displayName": "Homebridge Ntfy",
   "type": "module",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Homebridge plugin to send notifications through ntfy from HomeKit, with support for custom self-hosted servers and authentication",
   "author": "Evan Ribbey",
   "contributors": [
@@ -35,8 +35,8 @@
     "NOTICE"
   ],
   "engines": {
-    "node": "^20.18.0 || ^22.10.0 || ^24.0.0",
-    "homebridge": "^1.8.0 || ^2.0.0-beta.0"
+    "node": "^22 || ^24 || ^26",
+    "homebridge": "^2.0.0"
   },
   "scripts": {
     "build": "rimraf ./dist && tsc",
@@ -53,7 +53,7 @@
     "@types/node": "^24.10.2",
     "@vitest/coverage-v8": "^4.1.11",
     "eslint": "^9.39.1",
-    "homebridge": "^2.0.0-beta.55",
+    "homebridge": "^2.4.0",
     "nodemon": "^3.1.11",
     "rimraf": "^6.1.2",
     "ts-node": "^10.9.2",

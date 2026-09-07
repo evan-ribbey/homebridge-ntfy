@@ -16,8 +16,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Mirrors the node versions declared in package.json engines
-        node-version: ['20', '22', '24']
+        # Mirrors the node versions declared in package.json engines,
+        # which in turn track what Homebridge 2.x supports
+        node-version: ['22', '24', '26']
 
     steps:
       - name: Check out the repository

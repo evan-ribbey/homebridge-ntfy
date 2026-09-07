@@ -16,7 +16,7 @@ This is especially useful if you want to send a notification to your device when
 
 ## Prerequisites
 
-- Homebridge installed
+- Homebridge 2.0 or later, running on Node 22, 24 or 26
 - The ntfy app installed on your device
 - Optional: a self-hosted or SaaS ntfy server, if you'd rather not use the official ntfy.sh server
 
@@ -232,5 +232,5 @@ throwaway local HTTP server rather than a mocked HTTP layer, so request URLs, he
 handling are covered as they actually behave. The platform is exercised against a stand-in
 Homebridge API that rejects duplicate accessory UUIDs the way HAP does.
 
-CI runs lint, typecheck, tests, a build and a package check on Node 20, 22 and 24 through Gitea
-Actions (`.gitea/workflows/ci.yml`).
+CI runs lint, typecheck, tests, a build and a package check on Node 22, 24 and 26 through Gitea
+Actions (`.gitea/workflows/ci.yml`), matching the runtimes Homebridge 2.x supports.
