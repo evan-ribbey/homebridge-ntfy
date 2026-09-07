@@ -1,27 +1,32 @@
 {
-  "name": "homebridge-ntfy",
+  "name": "@eribbey/homebridge-ntfy",
   "displayName": "Homebridge Ntfy",
   "type": "module",
-  "version": "1.0.1",
-  "description": "Homebridge plugin to send notifications through ntfy.sh from HomeKit",
-  "author": {
-    "name": "Emil Löfblom",
-    "email": "emil.lofblom@icloud.com",
-    "url": "https://github.com/emilof"
-  },
+  "version": "1.1.0",
+  "description": "Homebridge plugin to send notifications through ntfy from HomeKit, with support for custom self-hosted servers and authentication",
+  "author": "Evan Ribbey",
+  "contributors": [
+    "Emil Löfblom (https://github.com/emilof)"
+  ],
   "license": "Apache-2.0",
-  "homepage": "https://github.com/emilof/homebridge-ntfy#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://git.ribbey.net/evan/homebridge-ntfy#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/emilof/homebridge-ntfy.git"
+    "url": "git+https://git.ribbey.net/evan/homebridge-ntfy.git"
   },
   "bugs": {
-    "url": "https://github.com/emilof/homebridge-ntfy/issues"
+    "url": "https://git.ribbey.net/evan/homebridge-ntfy/issues"
   },
   "keywords": [
     "homebridge",
     "homebridge-plugin",
-    "ntfy"
+    "ntfy",
+    "ntfy-sh",
+    "notifications",
+    "self-hosted"
   ],
   "main": "dist/index.js",
   "engines": {
@@ -34,7 +39,7 @@
     "prepublishOnly": "npm run lint && npm run build",
     "watch": "npm run build && npm link && nodemon"
   },
-   "devDependencies": {
+  "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@types/node": "^24.10.2",
     "eslint": "^9.39.1",

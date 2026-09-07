@@ -1,9 +1,11 @@
 # Homebridge Ntfy
 
-[![npm](https://img.shields.io/npm/v/homebridge-ntfy/latest?label=latest)](https://www.npmjs.com/package/homebridge-ntfy)
-[![npm](https://img.shields.io/npm/dt/homebridge-ntfy)](https://www.npmjs.com/package/homebridge-ntfy)
+[![npm](https://img.shields.io/npm/v/@eribbey/homebridge-ntfy/latest?label=latest)](https://www.npmjs.com/package/@eribbey/homebridge-ntfy)
+[![npm](https://img.shields.io/npm/dt/@eribbey/homebridge-ntfy)](https://www.npmjs.com/package/@eribbey/homebridge-ntfy)
 
-> Fork of [emilof/homebridge-ntfy](https://github.com/emilof/homebridge-ntfy) adding support for custom (self-hosted or SaaS) ntfy servers and authentication.
+> Maintained fork of [emilof/homebridge-ntfy](https://github.com/emilof/homebridge-ntfy), published as
+> [`@eribbey/homebridge-ntfy`](https://www.npmjs.com/package/@eribbey/homebridge-ntfy). Adds support for custom
+> (self-hosted or SaaS) ntfy servers and authentication. The upstream project is no longer actively maintained.
 
 This plugin allows you to send notifications through ntfy (https://ntfy.sh) directly from HomeKit. It works by creating a momentary switch, that when turned on, sends a message via ntfy. Once the message has been sent, the switch automatically returns to its off state.
 
@@ -21,13 +23,26 @@ This is especially useful if you want to send a notification to your device when
 
 ### Option 1: Homebridge UI
 
-Go to the 'Plugins' page, search for `homebridge-ntfy`, and click 'Install'.
+Go to the 'Plugins' page, search for `@eribbey/homebridge-ntfy`, and click 'Install'.
 
 ### Option 2: Manually
 
 Run the following command to install the plugin globally:
 
-    $ sudo npm install homebridge-ntfy -g
+    $ sudo npm install @eribbey/homebridge-ntfy -g
+
+### Migrating from `homebridge-ntfy`
+
+This fork uses the same platform identifier (`NtfyPlatform`) as upstream, so your existing
+`platforms` config block works unchanged. To switch over:
+
+1. Uninstall `homebridge-ntfy`.
+2. Install `@eribbey/homebridge-ntfy`.
+3. Restart Homebridge.
+
+Because Homebridge caches accessories per plugin, the switches are re-created under the new
+plugin. They keep the same names, but any HomeKit automations referencing them may need to be
+re-pointed at the new accessories.
 
 ## Configuration
 

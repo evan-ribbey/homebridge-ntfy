@@ -1,0 +1,16 @@
+@eribbey/homebridge-ntfy
+Copyright 2026 Evan Ribbey
+
+This product includes software originally developed as "homebridge-ntfy"
+by Emil Löfblom (https://github.com/emilof/homebridge-ntfy), licensed under
+the Apache License, Version 2.0.
+
+This is a maintained fork of that project. Changes made in this fork include:
+
+  - Support for publishing to a custom (self-hosted or SaaS) ntfy server
+    instead of only the official https://ntfy.sh server.
+  - Authentication support via access token or username/password.
+  - More detailed logging of failed publish requests.
+
+The original work remains available under the Apache License, Version 2.0,
+a copy of which is included in the LICENSE file.
