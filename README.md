@@ -2,6 +2,7 @@
 
 [![npm](https://img.shields.io/npm/v/@eribbey/homebridge-ntfy/latest?label=latest)](https://www.npmjs.com/package/@eribbey/homebridge-ntfy)
 [![npm](https://img.shields.io/npm/dt/@eribbey/homebridge-ntfy)](https://www.npmjs.com/package/@eribbey/homebridge-ntfy)
+[![CI](https://git.ribbey.net/evan/homebridge-ntfy/actions/workflows/ci.yml/badge.svg)](https://git.ribbey.net/evan/homebridge-ntfy/actions)
 
 > Maintained fork of [emilof/homebridge-ntfy](https://github.com/emilof/homebridge-ntfy), published as
 > [`@eribbey/homebridge-ntfy`](https://www.npmjs.com/package/@eribbey/homebridge-ntfy). Adds support for custom
@@ -211,3 +212,25 @@ In the example below, a message has been configured to have two action buttons. 
   ]
 }
 ```
+
+## Development
+
+    $ npm install
+
+| Script                  | Description                                                              |
+| ----------------------- | ------------------------------------------------------------------------ |
+| `npm run build`         | Compile TypeScript into `dist`.                                          |
+| `npm run lint`          | Run ESLint across the project.                                           |
+| `npm run typecheck`     | Type check sources and tests without emitting.                           |
+| `npm test`              | Run the test suite once.                                                 |
+| `npm run test:watch`    | Run the test suite in watch mode.                                        |
+| `npm run test:coverage` | Run the suite and report coverage.                                       |
+| `npm run watch`         | Build, link the plugin and run Homebridge against `./.homebridge`.       |
+
+Tests live in `test/` and run on [vitest](https://vitest.dev). The client is exercised against a
+throwaway local HTTP server rather than a mocked HTTP layer, so request URLs, headers and status
+handling are covered as they actually behave. The platform is exercised against a stand-in
+Homebridge API that rejects duplicate accessory UUIDs the way HAP does.
+
+CI runs lint, typecheck, tests, a build and a package check on Node 20, 22 and 24 through Gitea
+Actions (`.gitea/workflows/ci.yml`).

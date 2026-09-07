@@ -2,7 +2,7 @@
 dist
 
 # Local homebridge instance used by `npm run watch`
-test
+.homebridge
 
 # ------------- Defaults ------------- #
 .DS_Store
