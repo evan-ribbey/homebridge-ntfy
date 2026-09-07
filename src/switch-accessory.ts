@@ -1,11 +1,11 @@
-import type { Characteristic, CharacteristicValue, Logger, PlatformAccessory, Service } from 'homebridge';
+import type { Characteristic, CharacteristicValue, Logging, PlatformAccessory, Service } from 'homebridge';
 import type { NtfyClient } from './ntfy-client.js';
 import type { NtfyPlatform } from './platform.js';
 import type { Message } from './types.js';
 import { wait } from './utils.js';
 
 export class SwitchAccessory {
-  private log: Logger;
+  private log: Logging;
   private service: Service;
   private onCharacteristic: Characteristic;
 
@@ -55,7 +55,7 @@ export class SwitchAccessory {
     }
 
     if (this.isOn) {
-      this.triggerCooldown(this.message.cooldownTime);
+      void this.triggerCooldown(this.message.cooldownTime);
       await this.sendMessage();
       this.resetSwitch();
     }
@@ -82,9 +82,13 @@ export class SwitchAccessory {
       return;
     }
     
-    await this.ntfyClient.sendMessage(request);
-    
-    this.log.info('Message sent:', this.message.name);
+    const sent = await this.ntfyClient.sendMessage(request);
+
+    if (sent) {
+      this.log.info('Message sent:', this.message.name);
+    } else {
+      this.log.error('Failed to send message:', this.message.name);
+    }
   }
 
   private async triggerCooldown(cooldownTime = 0) {

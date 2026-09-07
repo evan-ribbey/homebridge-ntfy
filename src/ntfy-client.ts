@@ -7,7 +7,7 @@ export interface MessageRequest {
     message?: string;
     title?: string;
     tags?: string;
-    priority?: number;
+    priority?: string | number;
 }
 
 export class NtfyClient {
@@ -21,17 +21,23 @@ export class NtfyClient {
     this.authHeader = this.buildAuthHeader(auth);
   }
 
-  async sendMessage(request: MessageRequest | string) {
-    if (this.isMessageRequest(request)) {
-      return this.sendMessageRequest(request);
-    } else if (typeof request === 'string') {
+  /**
+   * Publishes a message. Resolves to true when the server accepted it, and to
+   * false when it did not - failures are logged here rather than thrown, so
+   * callers must check the result before reporting success.
+   */
+  async sendMessage(request: MessageRequest | string): Promise<boolean> {
+    if (typeof request === 'string') {
       return this.sendMessageJson(request);
-    } else {
-      this.log.error('Unknown request type:', request);
+    } else if (this.isMessageRequest(request)) {
+      return this.sendMessageRequest(request);
     }
+
+    this.log.error('Unknown request type:', request);
+    return false;
   }
 
-  private async sendMessageRequest(request: MessageRequest) {
+  private async sendMessageRequest(request: MessageRequest): Promise<boolean> {
     this.log.debug('Sending ntfy request:', request);
 
     const url = `${this.serverAddress}/${request.topic}`;
@@ -42,32 +48,34 @@ export class NtfyClient {
     if (request.title) {
       headers.Title = request.title;
     }
-    if (request.priority) {
+    if (request.priority !== undefined && request.priority !== '') {
       headers.Priority = request.priority.toString();
     }
     if (request.tags) {
       headers.Tags = request.tags;
     }
 
-    await axios.post(url, body, { headers })
-      .then(response => {
-        this.log.debug('Success! Result:', response.data);
-      })
-      .catch(error => {
-        this.logRequestError(error);
-      });
+    try {
+      const response = await axios.post(url, body, { headers });
+      this.log.debug('Success! Result:', response.data);
+      return true;
+    } catch (error) {
+      this.logRequestError(error);
+      return false;
+    }
   }
 
-  private async sendMessageJson(json: string) {
-    this.log.debug('Sending ntfy JSON request:', JSON.parse(json));
+  private async sendMessageJson(json: string): Promise<boolean> {
+    this.log.debug('Sending ntfy JSON request:', json);
 
-    await axios.post(this.serverAddress, json, { headers: this.baseHeaders() })
-      .then(response => {
-        this.log.debug('Success! Result:', response.data);
-      })
-      .catch(error => {
-        this.logRequestError(error);
-      });
+    try {
+      const response = await axios.post(this.serverAddress, json, { headers: this.baseHeaders() });
+      this.log.debug('Success! Result:', response.data);
+      return true;
+    } catch (error) {
+      this.logRequestError(error);
+      return false;
+    }
   }
 
   private baseHeaders(): Record<string, string> {
@@ -109,6 +117,6 @@ export class NtfyClient {
   }
 
   private isMessageRequest(obj: unknown): obj is MessageRequest {
-    return typeof (obj as { topic: unknown }).topic === 'string';
+    return typeof obj === 'object' && obj !== null && typeof (obj as { topic: unknown }).topic === 'string';
   }
 }

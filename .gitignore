@@ -1,6 +1,9 @@
 # Ignore compiled code
 dist
 
+# Local homebridge instance used by `npm run watch`
+test
+
 # ------------- Defaults ------------- #
 .DS_Store
 

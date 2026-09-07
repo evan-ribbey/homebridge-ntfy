@@ -47,11 +47,19 @@ export class NtfyPlatform implements DynamicPlatformPlugin {
       this.resolveAuth(config),
     );
 
+    const configuredNames = new Set<string>();
+
     if (config.messages) {
       for (const message of config.messages) {
         if (!this.validateMessage(message)) {
           continue;
         }
+
+        if (configuredNames.has(message.name)) {
+          this.log.error('Duplicate message name - names must be unique, skipping:', message.name);
+          continue;
+        }
+        configuredNames.add(message.name);
 
         const uuid = this.api.hap.uuid.generate(message.name);
 
@@ -118,6 +126,11 @@ export class NtfyPlatform implements DynamicPlatformPlugin {
   }
 
   private validateMessage(message: Message): boolean {
+    if (!message.name) {
+      this.log.error('Invalid message config - \'name\' is missing:', JSON.stringify(message));
+      return false;
+    }
+
     let error;
     if (message.useJson) {
       if (!message.json) {
@@ -127,7 +140,7 @@ export class NtfyPlatform implements DynamicPlatformPlugin {
       }
     } else {
       if (!message.topic) {
-        error = 'Invalid JSON message config - \'topic\' is missing:';
+        error = 'Invalid message config - \'topic\' is missing:';
       }
     }
     if (error) {

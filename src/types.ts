@@ -23,7 +23,7 @@ export interface Message {
   topic?: string,
   title?: string,
   message?: string,
-  priority?: number,
+  priority?: string | number,
   tags?: string,
   useJson?: boolean,
   json?: string;

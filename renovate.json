@@ -1,0 +1,22 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":rebaseStalePrs"
+  ],
+  "schedule": ["before 06:00 on monday"],
+  "prConcurrentLimit": 5,
+  "packageRules": [
+    {
+      "description": "Group dev dependency bumps into a single PR to keep review noise down",
+      "matchDepTypes": ["devDependencies"],
+      "groupName": "dev dependencies"
+    },
+    {
+      "description": "homebridge tracks a 2.x beta line, so surface bumps on the dashboard for manual approval instead of opening PRs automatically",
+      "matchPackageNames": ["homebridge"],
+      "dependencyDashboardApproval": true
+    }
+  ]
+}
