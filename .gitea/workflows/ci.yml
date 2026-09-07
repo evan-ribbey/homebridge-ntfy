@@ -27,7 +27,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: npm
+          # Dependency caching is deliberately off: the runner cannot reach the
+          # Gitea cache server, so every restore attempt times out and costs
+          # more than the install it was meant to save.
 
       - name: Install dependencies
         run: npm ci
