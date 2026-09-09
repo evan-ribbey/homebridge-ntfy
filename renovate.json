@@ -9,20 +9,54 @@
     "before 06:00 on monday"
   ],
   "prConcurrentLimit": 5,
+  "platformAutomerge": true,
+  "automergeStrategy": "squash",
   "packageRules": [
     {
-      "description": "Group dev dependency bumps into a single PR to keep review noise down",
+      "description": "Group dev dependency bumps into a single PR to keep review noise down, and let it merge itself once the CI matrix is green: nothing here ships to plugin users",
       "matchDepTypes": [
         "devDependencies"
       ],
-      "groupName": "dev dependencies"
+      "groupName": "dev dependencies",
+      "automerge": true
+    },
+    {
+      "description": "Runtime dependencies ship to users, so only non-breaking bumps merge themselves; majors stay manual",
+      "matchDepTypes": [
+        "dependencies"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest"
+      ],
+      "automerge": true
+    },
+    {
+      "description": "Let a release sit on the registry for a few days before it is eligible to merge unattended, so a pulled or compromised publish is caught before it lands on main",
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest"
+      ],
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "description": "Major bumps always get read by a human, whatever the rules above say",
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "automerge": false
     },
     {
       "description": "homebridge is the host runtime and its own engines drive this package's declared node support, so surface bumps on the dashboard for review instead of opening PRs automatically",
       "matchPackageNames": [
         "homebridge"
       ],
-      "dependencyDashboardApproval": true
+      "dependencyDashboardApproval": true,
+      "automerge": false
     }
   ]
 }
