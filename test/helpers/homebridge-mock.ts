@@ -4,11 +4,13 @@ import type { NtfyPlatform } from '../../src/platform.js';
 export interface RecordingLog {
   log: Logging;
   errors: string[];
+  warns: string[];
   infos: string[];
 }
 
 export const createLog = (): RecordingLog => {
   const errors: string[] = [];
+  const warns: string[] = [];
   const infos: string[] = [];
 
   const stringify = (args: unknown[]) => args.map((a) => String(a)).join(' ');
@@ -22,12 +24,14 @@ export const createLog = (): RecordingLog => {
       errors.push(stringify(args));
     },
     success: () => {},
-    warn: () => {},
+    warn: (...args: unknown[]) => {
+      warns.push(stringify(args));
+    },
     debug: () => {},
     log: () => {},
   }) as unknown as Logging;
 
-  return { log, errors, infos };
+  return { log, errors, warns, infos };
 };
 
 const characteristic = {

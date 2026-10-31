@@ -1,5 +1,7 @@
+import http from 'node:http';
+import type { AddressInfo } from 'node:net';
 import { afterEach, describe, expect, it } from 'vitest';
-import { NtfyClient } from '../src/ntfy-client.js';
+import { NtfyClient, encodeHeaderValue } from '../src/ntfy-client.js';
 import { createLog } from './helpers/homebridge-mock.js';
 import { startServer, type TestServer } from './helpers/test-server.js';
 
@@ -61,6 +63,54 @@ describe('request shape', () => {
 
     expect(target.lastRequest().url).toBe('/');
     expect(target.lastRequest().body).toBe('{"topic":"a","message":"hi"}');
+  });
+  it('posts a JSON message under the base path when one is configured', async () => {
+    const target = await server();
+    await new NtfyClient(createLog().log, `${target.url}/ntfy`).sendMessage('{"topic":"a"}');
+
+    expect(target.lastRequest().url).toBe('/ntfy/');
+  });
+
+  it('percent-encodes the topic so it cannot alter the request path', async () => {
+    const target = await server();
+    await new NtfyClient(createLog().log, target.url).sendMessage({ topic: 'a?b#c/../d' });
+
+    expect(target.lastRequest().url).toBe('/a%3Fb%23c%2F..%2Fd');
+  });
+});
+
+describe('header encoding', () => {
+  const decode = (value: string | string[] | undefined) => {
+    const match = /^=\?UTF-8\?B\?(.*)\?=$/.exec(String(value));
+    return match ? Buffer.from(match[1], 'base64').toString('utf8') : undefined;
+  };
+
+  it('leaves plain ASCII values untouched', async () => {
+    const target = await server();
+    await new NtfyClient(createLog().log, target.url).sendMessage({ topic: 'a', title: 'Door opened', tags: 'door,bell' });
+
+    expect(target.lastRequest().headers.title).toBe('Door opened');
+    expect(target.lastRequest().headers.tags).toBe('door,bell');
+  });
+
+  it('sends an emoji title instead of failing the request', async () => {
+    const target = await server();
+    const sent = await new NtfyClient(createLog().log, target.url).sendMessage({ topic: 'a', title: '🚪 Door opened' });
+
+    expect(sent).toBe(true);
+    expect(decode(target.lastRequest().headers.title)).toBe('🚪 Door opened');
+  });
+
+  it('sends accented text as UTF-8 rather than latin-1', async () => {
+    const target = await server();
+    await new NtfyClient(createLog().log, target.url).sendMessage({ topic: 'a', title: 'Café', tags: 'Äpfel' });
+
+    expect(decode(target.lastRequest().headers.title)).toBe('Café');
+    expect(decode(target.lastRequest().headers.tags)).toBe('Äpfel');
+  });
+
+  it('folds line breaks rather than letting the request throw', () => {
+    expect(encodeHeaderValue('line one\r\nline two')).toBe('line one line two');
   });
 });
 
@@ -182,5 +232,24 @@ describe('error logging', () => {
     await new NtfyClient(log, 'http://127.0.0.1:1').sendMessage({ topic: 'a' });
 
     expect(errors.some((e) => e.includes('ntfy request failed'))).toBe(true);
+  });
+});
+
+describe('timeouts', () => {
+  it('gives up on a server that never answers', async () => {
+    const silent = http.createServer(() => {});
+    await new Promise<void>((resolve) => silent.listen(0, '127.0.0.1', resolve));
+    const { port } = silent.address() as AddressInfo;
+    const { log, errors } = createLog();
+
+    try {
+      const sent = await new NtfyClient(log, `http://127.0.0.1:${port}`, undefined, 100).sendMessage({ topic: 'a' });
+
+      expect(sent).toBe(false);
+      expect(errors.some((e) => e.includes('timeout'))).toBe(true);
+    } finally {
+      silent.closeAllConnections();
+      await new Promise<void>((resolve) => silent.close(() => resolve()));
+    }
   });
 });

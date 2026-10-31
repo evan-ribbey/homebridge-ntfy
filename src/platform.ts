@@ -5,6 +5,9 @@ import type { Message, NtfyAuth, NtfyPlatformConfig } from './types.js';
 import { NtfyClient } from './ntfy-client.js';
 import { isValidJson, normalizeServerUrl } from './utils.js';
 
+/** ntfy's own rule for topic names: https://docs.ntfy.sh/publish/#picking-a-topic */
+const TOPIC_PATTERN = /^[-_A-Za-z0-9]{1,64}$/;
+
 export class NtfyPlatform implements DynamicPlatformPlugin {
   readonly Service: typeof Service;
   readonly Characteristic: typeof Characteristic;
@@ -41,11 +44,16 @@ export class NtfyPlatform implements DynamicPlatformPlugin {
 
     this.log.info('Using ntfy server:', serverUrl);
 
-    const ntfyClient = new NtfyClient(
-      this.log,
-      serverUrl,
-      this.resolveAuth(config),
-    );
+    const auth = this.resolveAuth(config);
+
+    if (auth && serverUrl.startsWith('http://')) {
+      this.log.warn(
+        'Credentials are configured for a plain http:// server, so they are sent unencrypted with every message. '
+        + 'Use https:// unless the server is only reachable on a trusted network.',
+      );
+    }
+
+    const ntfyClient = new NtfyClient(this.log, serverUrl, auth);
 
     const configuredNames = new Set<string>();
 
@@ -141,6 +149,8 @@ export class NtfyPlatform implements DynamicPlatformPlugin {
     } else {
       if (!message.topic) {
         error = 'Invalid message config - \'topic\' is missing:';
+      } else if (!TOPIC_PATTERN.test(message.topic)) {
+        error = 'Invalid message config - \'topic\' may only contain letters, numbers, \'-\' and \'_\' (max 64):';
       }
     }
     if (error) {

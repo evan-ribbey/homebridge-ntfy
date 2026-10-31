@@ -11,7 +11,7 @@ interface RunOptions {
 }
 
 const run = ({ messages = [], cached = [], ...platformConfig }: RunOptions = {}) => {
-  const { log, errors, infos } = createLog();
+  const { log, errors, warns, infos } = createLog();
   const { api, registered, unregistered, launch } = createMockApi();
 
   const config = { platform: 'NtfyPlatform', name: 'Homebridge Ntfy', messages, ...platformConfig } as PlatformConfig;
@@ -23,7 +23,7 @@ const run = ({ messages = [], cached = [], ...platformConfig }: RunOptions = {})
 
   launch();
 
-  return { errors, infos, registered, unregistered };
+  return { errors, warns, infos, registered, unregistered };
 };
 
 const serverInUse = (infos: string[]) => infos.find((line) => line.startsWith('Using ntfy server:'));
@@ -78,6 +78,23 @@ describe('authentication config', () => {
   });
 });
 
+describe('transport security', () => {
+  it('warns when credentials would be sent over plain http', () => {
+    const { warns } = run({ serverUrl: 'http://ntfy.home.lan', authType: 'token', accessToken: 'tk_secret' });
+    expect(warns.some((w) => w.includes('unencrypted'))).toBe(true);
+  });
+
+  it('does not warn for https', () => {
+    const { warns } = run({ serverUrl: 'https://ntfy.home.lan', authType: 'token', accessToken: 'tk_secret' });
+    expect(warns).toHaveLength(0);
+  });
+
+  it('does not warn for plain http without credentials', () => {
+    const { warns } = run({ serverUrl: 'http://ntfy.home.lan' });
+    expect(warns).toHaveLength(0);
+  });
+});
+
 describe('message validation', () => {
   it('registers an accessory per valid message', () => {
     const { registered, errors } = run({
@@ -101,6 +118,13 @@ describe('message validation', () => {
     expect(registered).toHaveLength(0);
     expect(errors.some((e) => e.startsWith('Invalid message config - \'topic\' is missing'))).toBe(true);
     expect(errors.some((e) => e.includes('Invalid JSON message config'))).toBe(false);
+  });
+
+  it('skips a message whose topic ntfy would reject', () => {
+    const { registered, errors } = run({ messages: [{ name: 'Bad topic', topic: 'my topic?' }] });
+
+    expect(registered).toHaveLength(0);
+    expect(errors.some((e) => e.includes('may only contain letters'))).toBe(true);
   });
 
   it('skips a JSON message with no payload', () => {
