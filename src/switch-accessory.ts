@@ -12,6 +12,9 @@ export class SwitchAccessory {
   private isOn = false;
   private inCooldown = false;
 
+  /** The send started by the most recent trigger, exposed for tests. */
+  pendingSend: Promise<void> = Promise.resolve();
+
   constructor(
     private readonly platform: NtfyPlatform,
     private readonly accessory: PlatformAccessory,
@@ -56,8 +59,13 @@ export class SwitchAccessory {
 
     if (this.isOn) {
       void this.triggerCooldown(this.message.cooldownTime);
-      await this.sendMessage();
-      this.resetSwitch();
+      // Not awaited: HomeKit expects onSet to return promptly, and a slow or
+      // unreachable ntfy server would otherwise leave the switch unresponsive
+      // and trip Homebridge's slow-plugin warnings. The switch stays on while
+      // the message is in flight, then resets.
+      this.pendingSend = this.sendMessage()
+        .catch((error: unknown) => this.log.error('Failed to send message:', this.message.name, error))
+        .finally(() => this.resetSwitch());
     }
   }
 

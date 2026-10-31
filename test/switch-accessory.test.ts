@@ -10,9 +10,16 @@ const build = (message: Message, sendResult = true) => {
   const sendMessage = vi.fn().mockResolvedValue(sendResult);
   const client = { sendMessage } as unknown as NtfyClient;
 
-  new SwitchAccessory(harness.platform, harness.accessory, client, message);
+  const accessory = new SwitchAccessory(harness.platform, harness.accessory, client, message);
 
-  return { ...harness, sendMessage, errors, infos };
+  // The send runs in the background so HomeKit gets an immediate reply; wait
+  // for it here so assertions see the finished result.
+  const setOn = async (value: boolean) => {
+    await harness.setOn(value);
+    await accessory.pendingSend;
+  };
+
+  return { ...harness, setOn, sendMessage, errors, infos };
 };
 
 describe('sending', () => {
@@ -83,6 +90,30 @@ describe('momentary behaviour', () => {
 
     expect(values[0]).toBe(true);
     expect(values[values.length - 1]).toBe(false);
+  });
+});
+
+describe('responsiveness', () => {
+  it('returns to HomeKit without waiting for the server, then resets once the send finishes', async () => {
+    const { log } = createLog();
+    const harness = createSwitchHarness('Doorbell', log);
+    let finish: (sent: boolean) => void = () => {};
+    const sendMessage = vi.fn(() => new Promise<boolean>((resolve) => {
+      finish = resolve;
+    }));
+    const accessory = new SwitchAccessory(
+      harness.platform, harness.accessory, { sendMessage } as unknown as NtfyClient, { name: 'Doorbell', topic: 'door' },
+    );
+
+    await harness.setOn(true);
+
+    expect(sendMessage).toHaveBeenCalledTimes(1);
+    expect(harness.values[harness.values.length - 1]).toBe(true);
+
+    finish(true);
+    await accessory.pendingSend;
+
+    expect(harness.values[harness.values.length - 1]).toBe(false);
   });
 });
 

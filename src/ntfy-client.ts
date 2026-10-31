@@ -10,6 +10,28 @@ export interface MessageRequest {
     priority?: string | number;
 }
 
+/**
+ * How long to wait for the ntfy server before giving up. Without a limit a
+ * server that accepts the connection but never answers leaves the request
+ * pending forever.
+ */
+export const REQUEST_TIMEOUT_MS = 10_000;
+
+/**
+ * Node only allows latin-1 in header values: anything beyond it (emoji, most
+ * scripts) makes the request throw, and latin-1 accents arrive at ntfy as
+ * invalid UTF-8. ntfy decodes RFC 2047 encoded words on every header, so
+ * non-ASCII values are sent as a base64 UTF-8 encoded word. Line breaks are
+ * folded to spaces, matching what ntfy does with them anyway.
+ */
+export const encodeHeaderValue = (value: string): string => {
+  const singleLine = value.replace(/[\r\n]+/g, ' ');
+  if (/^[\x20-\x7e]*$/.test(singleLine)) {
+    return singleLine;
+  }
+  return `=?UTF-8?B?${Buffer.from(singleLine, 'utf8').toString('base64')}?=`;
+};
+
 export class NtfyClient {
   private readonly authHeader?: string;
 
@@ -17,6 +39,7 @@ export class NtfyClient {
     private readonly log: Logging,
     private readonly serverAddress: string,
     auth?: NtfyAuth,
+    private readonly timeoutMs = REQUEST_TIMEOUT_MS,
   ) {
     this.authHeader = this.buildAuthHeader(auth);
   }
@@ -40,23 +63,24 @@ export class NtfyClient {
   private async sendMessageRequest(request: MessageRequest): Promise<boolean> {
     this.log.debug('Sending ntfy request:', request);
 
-    const url = `${this.serverAddress}/${request.topic}`;
+    // Encoded so a stray '?', '#' or '/' cannot truncate or redirect the path
+    const url = `${this.serverAddress}/${encodeURIComponent(request.topic)}`;
 
     const body = request.message;
 
     const headers: Record<string, string> = this.baseHeaders();
     if (request.title) {
-      headers.Title = request.title;
+      headers.Title = encodeHeaderValue(request.title);
     }
     if (request.priority !== undefined && request.priority !== '') {
-      headers.Priority = request.priority.toString();
+      headers.Priority = encodeHeaderValue(request.priority.toString());
     }
     if (request.tags) {
-      headers.Tags = request.tags;
+      headers.Tags = encodeHeaderValue(request.tags);
     }
 
     try {
-      const response = await axios.post(url, body, { headers });
+      const response = await axios.post(url, body, { headers, timeout: this.timeoutMs });
       this.log.debug('Success! Result:', response.data);
       return true;
     } catch (error) {
@@ -69,7 +93,13 @@ export class NtfyClient {
     this.log.debug('Sending ntfy JSON request:', json);
 
     try {
-      const response = await axios.post(this.serverAddress, json, { headers: this.baseHeaders() });
+      // ntfy takes JSON publishes at its root path. The trailing slash keeps a
+      // base path like https://host/ntfy pointing at /ntfy/ - without it a
+      // reverse proxy may redirect, and redirected POSTs turn into GETs.
+      const response = await axios.post(`${this.serverAddress}/`, json, {
+        headers: this.baseHeaders(),
+        timeout: this.timeoutMs,
+      });
       this.log.debug('Success! Result:', response.data);
       return true;
     } catch (error) {

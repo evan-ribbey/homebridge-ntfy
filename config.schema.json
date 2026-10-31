@@ -85,9 +85,10 @@
             },
             "topic": {
               "title": "Topic <strong><font color=\"red\" class=\"text-danger\">*</font></strong>",
-              "description": "Topic to publish message to. <strong>Important:</strong> Topics are public on ntfy's server and can be read by anyone, so pick a name that is hard for others to guess.",
+              "description": "Topic to publish message to. <strong>Important:</strong> Topics are public on ntfy's server and can be read by anyone, so pick a name that is hard for others to guess. Letters, numbers, '-' and '_' only, up to 64 characters.",
               "placeholder": "my-topic-2fd8cffa",
               "type": "string",
+              "pattern": "^[-_A-Za-z0-9]{1,64}$",
               "condition": {
 								"functionBody": "return !model.messages[arrayIndices].useJson;"
 							}
