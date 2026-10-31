@@ -2,7 +2,7 @@
   "name": "@eribbey/homebridge-ntfy",
   "displayName": "Homebridge Ntfy",
   "type": "module",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Homebridge plugin to send notifications through ntfy from HomeKit, with support for custom self-hosted servers and authentication",
   "author": "Evan Ribbey",
   "contributors": [
