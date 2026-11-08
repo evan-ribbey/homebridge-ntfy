@@ -2,7 +2,6 @@
 
 [![npm](https://img.shields.io/npm/v/@eribbey/homebridge-ntfy/latest?label=latest)](https://www.npmjs.com/package/@eribbey/homebridge-ntfy)
 [![npm](https://img.shields.io/npm/dt/@eribbey/homebridge-ntfy)](https://www.npmjs.com/package/@eribbey/homebridge-ntfy)
-[![CI](https://git.ribbey.net/evan/homebridge-ntfy/actions/workflows/ci.yml/badge.svg)](https://git.ribbey.net/evan/homebridge-ntfy/actions)
 
 > Maintained fork of [emilof/homebridge-ntfy](https://github.com/emilof/homebridge-ntfy), published as
 > [`@eribbey/homebridge-ntfy`](https://www.npmjs.com/package/@eribbey/homebridge-ntfy). Adds support for custom
