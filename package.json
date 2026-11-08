@@ -12,13 +12,13 @@
   "publishConfig": {
     "access": "public"
   },
-  "homepage": "https://git.ribbey.net/evan/homebridge-ntfy#readme",
+  "homepage": "https://github.com/evan-ribbey/homebridge-ntfy#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://git.ribbey.net/evan/homebridge-ntfy.git"
+    "url": "git+https://github.com/evan-ribbey/homebridge-ntfy.git"
   },
   "bugs": {
-    "url": "https://git.ribbey.net/evan/homebridge-ntfy/issues"
+    "url": "https://github.com/evan-ribbey/homebridge-ntfy/issues"
   },
   "keywords": [
     "homebridge",
