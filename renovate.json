@@ -5,8 +5,9 @@
     ":dependencyDashboard",
     ":rebaseStalePrs"
   ],
+  "timezone": "America/Los_Angeles",
   "schedule": [
-    "before 06:00 on monday"
+    "on monday"
   ],
   "prConcurrentLimit": 5,
   "platformAutomerge": true,
