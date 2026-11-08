@@ -80,7 +80,7 @@ export class NtfyClient {
     }
 
     try {
-      const response = await axios.post(url, body, { headers, timeout: this.timeoutMs });
+      const response = await axios.post(url, body, this.requestConfig(headers));
       this.log.debug('Success! Result:', response.data);
       return true;
     } catch (error) {
@@ -96,16 +96,23 @@ export class NtfyClient {
       // ntfy takes JSON publishes at its root path. The trailing slash keeps a
       // base path like https://host/ntfy pointing at /ntfy/ - without it a
       // reverse proxy may redirect, and redirected POSTs turn into GETs.
-      const response = await axios.post(`${this.serverAddress}/`, json, {
-        headers: this.baseHeaders(),
-        timeout: this.timeoutMs,
-      });
+      const response = await axios.post(`${this.serverAddress}/`, json, this.requestConfig(this.baseHeaders()));
       this.log.debug('Success! Result:', response.data);
       return true;
     } catch (error) {
       this.logRequestError(error);
       return false;
     }
+  }
+
+  /**
+   * Redirects are never followed: on a 301/302 the POST is replayed as a GET
+   * without its body, which ntfy answers with 200, so the message would be
+   * dropped while reporting success. Failing loudly lets the user point the
+   * server URL at where it redirects to (typically http:// -> https://).
+   */
+  private requestConfig(headers: Record<string, string>) {
+    return { headers, timeout: this.timeoutMs, maxRedirects: 0 };
   }
 
   private baseHeaders(): Record<string, string> {
@@ -127,8 +134,16 @@ export class NtfyClient {
 
   private logRequestError(error: unknown) {
     if (axios.isAxiosError(error) && error.response) {
-      const { status, data } = error.response;
+      const { status, data, headers } = error.response;
       const details = typeof data === 'string' ? data : JSON.stringify(data);
+
+      if (status >= 300 && status < 400) {
+        this.log.error(
+          `ntfy request failed: ${status} - the server sent a redirect to ${headers?.location ?? 'another address'}. `
+          + 'Following it would drop the message, so set the server URL to the address it redirects to.',
+        );
+        return;
+      }
 
       if (status === 401 || status === 403) {
         this.log.error(

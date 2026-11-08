@@ -7,6 +7,7 @@ import { isValidJson, normalizeServerUrl } from './utils.js';
 
 /** ntfy's own rule for topic names: https://docs.ntfy.sh/publish/#picking-a-topic */
 const TOPIC_PATTERN = /^[-_A-Za-z0-9]{1,64}$/;
+const TOPIC_RULE = '\'topic\' may only contain letters, numbers, \'-\' and \'_\' (max 64):';
 
 export class NtfyPlatform implements DynamicPlatformPlugin {
   readonly Service: typeof Service;
@@ -145,12 +146,20 @@ export class NtfyPlatform implements DynamicPlatformPlugin {
         error = 'Invalid JSON message config - \'json\' is missing:';
       } else if (!isValidJson(message.json)) {
         error = 'Invalid JSON message config - \'json\' is malformed:';
+      } else {
+        // ntfy only accepts a JSON publish that is an object naming its topic
+        const topic = this.jsonTopic(message.json);
+        if (topic === undefined) {
+          error = 'Invalid JSON message config - \'json\' must be a JSON object with a \'topic\' string:';
+        } else if (!TOPIC_PATTERN.test(topic)) {
+          error = `Invalid JSON message config - ${TOPIC_RULE}`;
+        }
       }
     } else {
       if (!message.topic) {
         error = 'Invalid message config - \'topic\' is missing:';
       } else if (!TOPIC_PATTERN.test(message.topic)) {
-        error = 'Invalid message config - \'topic\' may only contain letters, numbers, \'-\' and \'_\' (max 64):';
+        error = `Invalid message config - ${TOPIC_RULE}`;
       }
     }
     if (error) {
@@ -158,5 +167,15 @@ export class NtfyPlatform implements DynamicPlatformPlugin {
       return false;
     }
     return true;
+  }
+
+  /** The topic of an already-parseable JSON payload, or undefined when it has none. */
+  private jsonTopic(json: string): string | undefined {
+    const payload: unknown = JSON.parse(json);
+    if (typeof payload !== 'object' || payload === null || Array.isArray(payload)) {
+      return undefined;
+    }
+    const { topic } = payload as { topic?: unknown };
+    return typeof topic === 'string' ? topic : undefined;
   }
 }

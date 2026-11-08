@@ -141,6 +141,37 @@ describe('message validation', () => {
     expect(errors.some((e) => e.includes('malformed'))).toBe(true);
   });
 
+  it('registers a well-formed JSON message', () => {
+    const { registered, errors } = run({
+      messages: [{ name: 'Json', useJson: true, json: '{"topic":"door","message":"hi"}' }],
+    });
+
+    expect(registered.map((a) => a.displayName)).toEqual(['Json']);
+    expect(errors).toHaveLength(0);
+  });
+
+  // Valid JSON is not enough: ntfy only accepts an object naming its topic, so
+  // anything else used to pass validation and then fail on every trigger.
+  it.each([
+    ['a string', '"hello"'],
+    ['an array', '[{"topic":"door"}]'],
+    ['null', 'null'],
+    ['an object without a topic', '{"message":"hi"}'],
+    ['an object with a non-string topic', '{"topic":42}'],
+  ])('skips a JSON message whose payload is %s', (_label, json) => {
+    const { registered, errors } = run({ messages: [{ name: 'Bad', useJson: true, json }] });
+
+    expect(registered).toHaveLength(0);
+    expect(errors.some((e) => e.includes('must be a JSON object with a \'topic\''))).toBe(true);
+  });
+
+  it('skips a JSON message whose topic ntfy would reject', () => {
+    const { registered, errors } = run({ messages: [{ name: 'Bad', useJson: true, json: '{"topic":"my topic?"}' }] });
+
+    expect(registered).toHaveLength(0);
+    expect(errors.some((e) => e.includes('may only contain letters'))).toBe(true);
+  });
+
   it('keeps registering valid messages after an invalid one', () => {
     const { registered } = run({
       messages: [{ name: 'Bad' }, { name: 'Good', topic: 'ok' }],

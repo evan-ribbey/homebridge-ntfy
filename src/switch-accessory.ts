@@ -50,6 +50,12 @@ export class SwitchAccessory {
     this.isOn = value as boolean;
     this.onCharacteristic.updateValue(this.isOn);
 
+    // Only turning the switch on triggers anything; switching it off (by hand,
+    // or by an automation) is not a suppressed trigger even during cooldown
+    if (!this.isOn) {
+      return;
+    }
+
     if (this.inCooldown) {
       this.log.info('Still in cooldown:', this.message.name);
       await wait(250);
@@ -57,16 +63,14 @@ export class SwitchAccessory {
       return;
     }
 
-    if (this.isOn) {
-      void this.triggerCooldown(this.message.cooldownTime);
-      // Not awaited: HomeKit expects onSet to return promptly, and a slow or
-      // unreachable ntfy server would otherwise leave the switch unresponsive
-      // and trip Homebridge's slow-plugin warnings. The switch stays on while
-      // the message is in flight, then resets.
-      this.pendingSend = this.sendMessage()
-        .catch((error: unknown) => this.log.error('Failed to send message:', this.message.name, error))
-        .finally(() => this.resetSwitch());
-    }
+    void this.triggerCooldown(this.message.cooldownTime);
+    // Not awaited: HomeKit expects onSet to return promptly, and a slow or
+    // unreachable ntfy server would otherwise leave the switch unresponsive
+    // and trip Homebridge's slow-plugin warnings. The switch stays on while
+    // the message is in flight, then resets.
+    this.pendingSend = this.sendMessage()
+      .catch((error: unknown) => this.log.error('Failed to send message:', this.message.name, error))
+      .finally(() => this.resetSwitch());
   }
 
   private async getOn(): Promise<CharacteristicValue> {
