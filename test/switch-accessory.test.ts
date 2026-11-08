@@ -128,6 +128,16 @@ describe('cooldown', () => {
     expect(infos.some((i) => i.includes('Still in cooldown'))).toBe(true);
   });
 
+  it('does not treat switching off during the cooldown as a suppressed trigger', async () => {
+    const { setOn, sendMessage, infos } = build({ name: 'Doorbell', topic: 'door', cooldownTime: 500 });
+
+    await setOn(true);
+    await setOn(false);
+
+    expect(sendMessage).toHaveBeenCalledTimes(1);
+    expect(infos.some((i) => i.includes('Still in cooldown'))).toBe(false);
+  });
+
   it('allows the next trigger once the cooldown has elapsed', async () => {
     const { setOn, sendMessage } = build({ name: 'Doorbell', topic: 'door', cooldownTime: 20 });
 

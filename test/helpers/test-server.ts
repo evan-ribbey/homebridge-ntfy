@@ -20,7 +20,11 @@ export interface TestServer {
  * server rather than a mocked axios keeps these tests honest about headers,
  * request bodies and status handling.
  */
-export const startServer = async (status = 200, body = '{"id":"ok"}'): Promise<TestServer> => {
+export const startServer = async (
+  status = 200,
+  body = '{"id":"ok"}',
+  headers: Record<string, string> = {},
+): Promise<TestServer> => {
   const requests: CapturedRequest[] = [];
 
   const server = http.createServer((req, res) => {
@@ -35,7 +39,7 @@ export const startServer = async (status = 200, body = '{"id":"ok"}'): Promise<T
         headers: req.headers,
         body: received,
       });
-      res.writeHead(status, { 'Content-Type': 'application/json' });
+      res.writeHead(status, { 'Content-Type': 'application/json', ...headers });
       res.end(body);
     });
   });

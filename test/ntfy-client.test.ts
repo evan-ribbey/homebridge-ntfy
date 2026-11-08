@@ -7,8 +7,8 @@ import { startServer, type TestServer } from './helpers/test-server.js';
 
 let servers: TestServer[] = [];
 
-const server = async (status?: number, body?: string) => {
-  const started = await startServer(status, body);
+const server = async (status?: number, body?: string, headers?: Record<string, string>) => {
+  const started = await startServer(status, body, headers);
   servers.push(started);
   return started;
 };
@@ -189,6 +189,25 @@ describe('result reporting', () => {
   it('resolves false for a rejected JSON message', async () => {
     const target = await server(403, '{"error":"forbidden"}');
     await expect(new NtfyClient(createLog().log, target.url).sendMessage('{"topic":"a"}')).resolves.toBe(false);
+  });
+
+  // Following a 301/302 turns the POST into a body-less GET, which ntfy answers
+  // with 200 - so the message was silently dropped yet reported as sent.
+  it('does not follow a redirect and report a dropped message as sent', async () => {
+    // Redirects back to this same server, so a followed GET would succeed
+    const target = await server(301, '', { Location: '/moved/a' });
+    const { log, errors } = createLog();
+
+    await expect(new NtfyClient(log, target.url).sendMessage({ topic: 'a', message: 'hi' })).resolves.toBe(false);
+    expect(target.requests).toHaveLength(1);
+    expect(errors.some((e) => e.includes('redirect') && e.includes('/moved/a'))).toBe(true);
+  });
+
+  it('does not follow a redirect for a JSON message either', async () => {
+    const target = await server(302, '', { Location: '/moved/' });
+
+    await expect(new NtfyClient(createLog().log, target.url).sendMessage('{"topic":"a"}')).resolves.toBe(false);
+    expect(target.requests).toHaveLength(1);
   });
 
   it('resolves false without throwing on a request that is neither an object nor a string', async () => {

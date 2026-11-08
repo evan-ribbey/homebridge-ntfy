@@ -86,7 +86,7 @@ An alternative is to edit the Homebridge JSON config file manually by adding the
 | └&nbsp;`priority`     | `string` \| `number` | No | Priority of the message, either a name (`max`, `high`, `default`, `low`, `min`) or ntfy's numeric equivalent (`5`-`1`). Default: **default**. [[More info](https://docs.ntfy.sh/publish/#message-priority)] |
 | └&nbsp;`tags`         | `string`  | No       | Tag message with emoji or text tag. A comma-separated list of tag names. [[More info](https://docs.ntfy.sh/emojis)] |
 | └&nbsp;`json`         | `string`  | Yes/No   | Required if `useJson` is set to `true`. For advanced users ONLY. The value must be a valid JSON string (escaped) and adhere to ntfy's JSON message format. [[More info](https://docs.ntfy.sh/subscribe/api/#json-message-format)] |
-| └&nbsp;`cooldownTime` | `number`  | No       | Minimum time before this message can be sent again. Default: no cooldown. |
+| └&nbsp;`cooldownTime` | `number`  | No       | Minimum time, in milliseconds, before this message can be sent again. Default: no cooldown. |
 
 ### Example config
 
