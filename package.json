@@ -2,7 +2,7 @@
   "name": "@eribbey/homebridge-ntfy",
   "displayName": "Homebridge Ntfy",
   "type": "module",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Homebridge plugin to send notifications through ntfy from HomeKit, with support for custom self-hosted servers and authentication",
   "author": "Evan Ribbey",
   "contributors": [
@@ -63,5 +63,9 @@
   },
   "dependencies": {
     "axios": "^1.21.0"
+  },
+  "funding": {
+    "type": "kofi",
+    "url": "https://ko-fi.com/eribbey"
   }
 }
